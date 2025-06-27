@@ -1,0 +1,477 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+
+export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showAddCommentModal, setShowAddCommentModal] = useState(false);
+  const [newComment, setNewComment] = useState({
+    name: "",
+    role: "",
+    company: "",
+    comment: "",
+    rating: 5
+  });
+
+  // Sample comments data with state management
+  const [recentComments, setRecentComments] = useState([
+    { id: 1, name: "John Smith", role: "Security Manager", company: "TechCorp", comment: "Excellent security solutions. The AI detection is incredibly accurate.", rating: 5, date: "2 hours ago" },
+    { id: 2, name: "Sarah Johnson", role: "IT Director", company: "GlobalBank", comment: "Professional service and reliable systems. Highly recommended.", rating: 5, date: "1 day ago" },
+    { id: 3, name: "Mike Chen", role: "Facility Manager", company: "RetailPlus", comment: "Great customer support and easy installation process.", rating: 4, date: "2 days ago" },
+  ]);
+
+  // Sample product data with state management
+  const [products, setProducts] = useState([
+    { id: 1, name: "Smart Camera Pro", category: "Cameras", price: "$199", stock: 34, status: "Active" },
+    { id: 2, name: "Alarm Chip X2", category: "Alarms", price: "$49", stock: 120, status: "Active" },
+    { id: 3, name: "RFID Access Panel", category: "Access Control", price: "$299", stock: 12, status: "Inactive" },
+    { id: 4, name: "Motion Sensor Mini", category: "Sensors", price: "$39", stock: 58, status: "Active" },
+  ]);
+
+  const stats = [
+    { title: "Total Comments", value: recentComments.length.toString(), change: "+8%", color: "green" },
+    { title: "Total Products", value: products.length.toString(), change: "+23%", color: "purple" },
+    { title: "Sold", value: "0", change: "-3%", color: "orange" },
+  ];
+
+  // Function to update product quantity
+  const updateProductQuantity = (productId: number, newQuantity: number) => {
+    setProducts(products.map(product => 
+      product.id === productId 
+        ? { ...product, stock: newQuantity }
+        : product
+    ));
+  };
+
+  // Function to add new comment
+  const handleAddComment = () => {
+    if (newComment.name && newComment.comment) {
+      const comment = {
+        id: recentComments.length + 1,
+        ...newComment,
+        date: "Just now"
+      };
+      setRecentComments([comment, ...recentComments]);
+      setNewComment({
+        name: "",
+        role: "",
+        company: "",
+        comment: "",
+        rating: 5
+      });
+      setShowAddCommentModal(false);
+    }
+  };
+
+  // Function to handle input changes
+  const handleInputChange = (field: string, value: string | number) => {
+    setNewComment(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const renderDashboard = () => (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <div key={index} className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              </div>
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-${stat.color}-100`}>
+                <span className={`text-${stat.color}-600 font-semibold`}>{stat.change}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* Only Recent Comments section remains */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Recent Comments */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Comments</h3>
+          <div className="space-y-4">
+            {recentComments.map((comment) => (
+              <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-medium text-gray-900">{comment.name}</h4>
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className={`w-4 h-4 ${i < comment.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">"{comment.comment}"</p>
+                <p className="text-xs text-gray-500">{comment.date}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderProducts = () => (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">All Products</h3>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+          Add New Product
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {products.map((product) => (
+              <tr key={product.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{product.category}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{product.price}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <input
+                    type="number"
+                    min="0"
+                    value={product.stock}
+                    onChange={(e) => updateProductQuantity(product.id, parseInt(e.target.value) || 0)}
+                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    product.status === "Active" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-800"
+                  }`}>
+                    {product.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                  <button className="text-red-600 hover:text-red-900">Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
+  const renderComments = () => (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">All Comments</h3>
+        <button 
+          onClick={() => setShowAddCommentModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Add New Comment
+        </button>
+      </div>
+      <div className="space-y-4">
+        {recentComments.map((comment) => (
+          <div key={comment.id} className="border border-gray-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                  {comment.name.charAt(0)}
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">{comment.name}</h4>
+                  <p className="text-sm text-gray-500">{comment.role} at {comment.company}</p>
+                  <p className="text-sm text-gray-500">{comment.date}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <svg
+                      key={i}
+                      className={`w-4 h-4 ${i < comment.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <button className="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
+                <button className="text-red-600 hover:text-red-900 text-sm">Delete</button>
+              </div>
+            </div>
+            <p className="text-gray-700">"{comment.comment}"</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Add Comment Modal */}
+      {showAddCommentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Add New Comment</h3>
+              <button 
+                onClick={() => setShowAddCommentModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <input
+                  type="text"
+                  value={newComment.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter client name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <input
+                  type="text"
+                  value={newComment.role}
+                  onChange={(e) => handleInputChange("role", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Security Manager"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                <input
+                  type="text"
+                  value={newComment.company}
+                  onChange={(e) => handleInputChange("company", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., TechCorp"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                <div className="flex space-x-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => handleInputChange("rating", star)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        star <= newComment.rating ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-400'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Comment *</label>
+                <textarea
+                  value={newComment.comment}
+                  onChange={(e) => handleInputChange("comment", e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter client testimonial"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddCommentModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddComment}
+                disabled={!newComment.name || !newComment.comment}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Comment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderSettings = () => (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">Settings</h3>
+      <div className="space-y-6">
+        <div>
+          <h4 className="text-md font-medium text-gray-900 mb-4">Company Information</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+              <input type="text" defaultValue="SecureTech Solutions" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input type="email" defaultValue="info@securetech.com" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+              <input type="tel" defaultValue="+1 (555) 123-4567" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+              <input type="text" defaultValue="123 Security Street" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+        </div>
+        <div>
+          <h4 className="text-md font-medium text-gray-900 mb-4">Website Settings</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Site Title</label>
+              <input type="text" defaultValue="SecureTech Solutions - Security Company" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+              <textarea rows={3} defaultValue="Leading provider of advanced security solutions for homes and businesses." className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="text-xl font-semibold text-gray-900 ml-2">Admin Dashboard</h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Link href="/" className="text-gray-500 hover:text-gray-700">
+              View Site
+            </Link>
+            <button className="text-gray-500 hover:text-gray-700">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM4 19h6v-6H4v6z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className={`${isSidebarOpen ? 'block' : 'hidden'} lg:block w-64 bg-white shadow-sm border-r border-gray-200`}>
+          <nav className="mt-8">
+            <div className="px-4 space-y-2">
+              <button
+                onClick={() => setActiveTab("dashboard")}
+                className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "dashboard" ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z" />
+                </svg>
+                Dashboard
+              </button>
+              <button
+                onClick={() => setActiveTab("products")}
+                className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "products" ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6m16 0H4" />
+                </svg>
+                Products
+              </button>
+              <button
+                onClick={() => setActiveTab("comments")}
+                className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "comments" ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Comments
+              </button>
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === "settings" ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+              </button>
+            </div>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-6">
+          {activeTab === "dashboard" && renderDashboard()}
+          {activeTab === "products" && renderProducts()}
+          {activeTab === "comments" && renderComments()}
+          {activeTab === "settings" && renderSettings()}
+        </main>
+      </div>
+    </div>
+  );
+} 
