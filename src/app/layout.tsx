@@ -27,22 +27,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Navigation Bar */}
-        <nav className="w-full flex items-center justify-between px-8 py-4 bg-white shadow-md">
-          {/* Logo */}
-          <div className="flex items-center flex-1">
-            <span className="text-2xl font-bold text-blue-600">SecuLogo</span>
-          </div>
-          {/* Centered Navigation Links */}
-          <div className="flex-1 flex justify-center gap-6">
-            <a href="/" className="px-4 py-2 rounded-md font-semibold text-gray-700 hover:bg-blue-100 transition">Home</a>
-            <a href="#about" className="px-4 py-2 rounded-md font-semibold text-gray-700 hover:bg-blue-100 transition">About Us</a>
-          </div>
-          {/* Contact Button on the right */}
-          <div className="flex-1 flex justify-end">
-            <a href="#contact" className="px-6 py-2 rounded-md font-semibold bg-blue-600 text-white hover:bg-blue-700 transition shadow">Contact</a>
-          </div>
-        </nav>
         {children}
       </body>
     </html>

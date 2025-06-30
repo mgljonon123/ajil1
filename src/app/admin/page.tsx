@@ -7,27 +7,41 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showAddCommentModal, setShowAddCommentModal] = useState(false);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showEditProductModal, setShowEditProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<{
+    id: number;
+    name: string;
+    category: string;
+    price: string;
+    stock: number;
+  } | null>(null);
   const [newComment, setNewComment] = useState({
     name: "",
     role: "",
     company: "",
-    comment: "",
-    rating: 5
+    comment: ""
+  });
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    category: "Cameras",
+    price: "",
+    stock: 0
   });
 
   // Sample comments data with state management
   const [recentComments, setRecentComments] = useState([
-    { id: 1, name: "John Smith", role: "Security Manager", company: "TechCorp", comment: "Excellent security solutions. The AI detection is incredibly accurate.", rating: 5, date: "2 hours ago" },
-    { id: 2, name: "Sarah Johnson", role: "IT Director", company: "GlobalBank", comment: "Professional service and reliable systems. Highly recommended.", rating: 5, date: "1 day ago" },
-    { id: 3, name: "Mike Chen", role: "Facility Manager", company: "RetailPlus", comment: "Great customer support and easy installation process.", rating: 4, date: "2 days ago" },
+    { id: 1, name: "John Smith", role: "Security Manager", company: "TechCorp", comment: "Excellent security solutions. The AI detection is incredibly accurate." },
+    { id: 2, name: "Sarah Johnson", role: "IT Director", company: "GlobalBank", comment: "Professional service and reliable systems. Highly recommended." },
+    { id: 3, name: "Mike Chen", role: "Facility Manager", company: "RetailPlus", comment: "Great customer support and easy installation process." },
   ]);
 
   // Sample product data with state management
   const [products, setProducts] = useState([
-    { id: 1, name: "Smart Camera Pro", category: "Cameras", price: "$199", stock: 34, status: "Active" },
-    { id: 2, name: "Alarm Chip X2", category: "Alarms", price: "$49", stock: 120, status: "Active" },
-    { id: 3, name: "RFID Access Panel", category: "Access Control", price: "$299", stock: 12, status: "Inactive" },
-    { id: 4, name: "Motion Sensor Mini", category: "Sensors", price: "$39", stock: 58, status: "Active" },
+    { id: 1, name: "Smart Camera Pro", category: "Cameras", price: "$199", stock: 34 },
+    { id: 2, name: "Alarm Chip X2", category: "Alarms", price: "$49", stock: 120 },
+    { id: 3, name: "RFID Access Panel", category: "Access Control", price: "$299", stock: 12 },
+    { id: 4, name: "Motion Sensor Mini", category: "Sensors", price: "$39", stock: 58 },
   ]);
 
   const stats = [
@@ -50,18 +64,35 @@ export default function AdminPage() {
     if (newComment.name && newComment.comment) {
       const comment = {
         id: recentComments.length + 1,
-        ...newComment,
-        date: "Just now"
+        ...newComment
       };
       setRecentComments([comment, ...recentComments]);
       setNewComment({
         name: "",
         role: "",
         company: "",
-        comment: "",
-        rating: 5
+        comment: ""
       });
       setShowAddCommentModal(false);
+    }
+  };
+
+  // Function to add new product
+  const handleAddProduct = () => {
+    if (newProduct.name && newProduct.price && newProduct.stock > 0) {
+      const product = {
+        id: products.length + 1,
+        ...newProduct,
+        price: newProduct.price.startsWith('$') ? newProduct.price : `$${newProduct.price}`
+      };
+      setProducts([...products, product]);
+      setNewProduct({
+        name: "",
+        category: "Cameras",
+        price: "",
+        stock: 0
+      });
+      setShowAddProductModal(false);
     }
   };
 
@@ -71,6 +102,53 @@ export default function AdminPage() {
       ...prev,
       [field]: value
     }));
+  };
+
+  // Function to handle product input changes
+  const handleProductInputChange = (field: string, value: string | number) => {
+    setNewProduct(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Function to handle editing product input changes
+  const handleEditProductInputChange = (field: string, value: string | number) => {
+    if (editingProduct) {
+      setEditingProduct(prev => prev ? {
+        ...prev,
+        [field]: value
+      } : null);
+    }
+  };
+
+  // Function to start editing a product
+  const handleEditProduct = (product: { id: number; name: string; category: string; price: string; stock: number }) => {
+    setEditingProduct({ ...product });
+    setShowEditProductModal(true);
+  };
+
+  // Function to save edited product
+  const handleSaveEditProduct = () => {
+    if (editingProduct && editingProduct.name && editingProduct.price && editingProduct.stock > 0) {
+      setProducts(products.map(product => 
+        product.id === editingProduct.id 
+          ? { 
+              ...editingProduct, 
+              price: editingProduct.price.startsWith('$') ? editingProduct.price : `$${editingProduct.price}` 
+            }
+          : product
+      ));
+      setEditingProduct(null);
+      setShowEditProductModal(false);
+    }
+  };
+
+  // Function to delete a product
+  const handleDeleteProduct = (productId: number) => {
+    if (confirm('Are you sure you want to delete this product?')) {
+      setProducts(products.filter(product => product.id !== productId));
+    }
   };
 
   const renderDashboard = () => (
@@ -101,21 +179,8 @@ export default function AdminPage() {
               <div key={comment.id} className="border-b border-gray-200 pb-4 last:border-b-0">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium text-gray-900">{comment.name}</h4>
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className={`w-4 h-4 ${i < comment.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">"{comment.comment}"</p>
-                <p className="text-xs text-gray-500">{comment.date}</p>
               </div>
             ))}
           </div>
@@ -124,65 +189,137 @@ export default function AdminPage() {
     </div>
   );
 
-  const renderProducts = () => (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">All Products</h3>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-          Add New Product
-        </button>
+  const renderProducts = () => {
+    // Filter products by category
+    const cameraProducts = products.filter(p => p.category.toLowerCase() === 'cameras');
+    const duutDohioProducts = products.filter(p => p.category.toLowerCase() === 'alarms');
+
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Products</h3>
+          <button 
+            onClick={() => setShowAddProductModal(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Add New Product
+          </button>
+        </div>
+        {/* Camera Products */}
+        <div className="mb-8">
+          <h4 className="text-md font-bold text-blue-700 mb-4">Camera</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {cameraProducts.map((product) => (
+                  <tr key={product.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{product.category}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{product.price}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        min="0"
+                        value={product.stock}
+                        onChange={(e) => updateProductQuantity(product.id, parseInt(e.target.value) || 0)}
+                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button 
+                        onClick={() => handleEditProduct(product)}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {cameraProducts.length === 0 && <div className="text-gray-500 py-4">No camera products found.</div>}
+          </div>
+        </div>
+        {/* Duut Dohio Products */}
+        <div>
+          <h4 className="text-md font-bold text-blue-700 mb-4">Duut Dohio</h4>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {duutDohioProducts.map((product) => (
+                  <tr key={product.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{product.category}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{product.price}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        min="0"
+                        value={product.stock}
+                        onChange={(e) => updateProductQuantity(product.id, parseInt(e.target.value) || 0)}
+                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button 
+                        onClick={() => handleEditProduct(product)}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {duutDohioProducts.length === 0 && <div className="text-gray-500 py-4">No duut dohio products found.</div>}
+          </div>
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => (
-              <tr key={product.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{product.category}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{product.price}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="number"
-                    min="0"
-                    value={product.stock}
-                    onChange={(e) => updateProductQuantity(product.id, parseInt(e.target.value) || 0)}
-                    className="w-20 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    product.status === "Active" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-800"
-                  }`}>
-                    {product.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                  <button className="text-red-600 hover:text-red-900">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderComments = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -206,22 +343,9 @@ export default function AdminPage() {
                 <div>
                   <h4 className="font-medium text-gray-900">{comment.name}</h4>
                   <p className="text-sm text-gray-500">{comment.role} at {comment.company}</p>
-                  <p className="text-sm text-gray-500">{comment.date}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <svg
-                      key={i}
-                      className={`w-4 h-4 ${i < comment.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
                 <button className="text-blue-600 hover:text-blue-900 text-sm">Edit</button>
                 <button className="text-red-600 hover:text-red-900 text-sm">Delete</button>
               </div>
@@ -282,25 +406,6 @@ export default function AdminPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-                <div className="flex space-x-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => handleInputChange("rating", star)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        star <= newComment.rating ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-400'
-                      }`}
-                    >
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Comment *</label>
                 <textarea
                   value={newComment.comment}
@@ -341,40 +446,22 @@ export default function AdminPage() {
           <h4 className="text-md font-medium text-gray-900 mb-4">Company Information</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
-              <input type="text" defaultValue="SecureTech Solutions" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-sm font-medium text-gray-900 mb-2">Company Name</label>
+              <input type="text" defaultValue="SecureTech Solutions" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <input type="email" defaultValue="info@securetech.com" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-sm font-medium text-gray-900 mb-2">Email</label>
+              <input type="email" defaultValue="info@securetech.com" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-              <input type="tel" defaultValue="+1 (555) 123-4567" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-sm font-medium text-gray-900 mb-2">Phone</label>
+              <input type="tel" defaultValue="+1 (555) 123-4567" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-              <input type="text" defaultValue="123 Security Street" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <label className="block text-sm font-medium text-gray-900 mb-2">Address</label>
+              <input type="text" defaultValue="123 Security Street" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" />
             </div>
           </div>
-        </div>
-        <div>
-          <h4 className="text-md font-medium text-gray-900 mb-4">Website Settings</h4>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Site Title</label>
-              <input type="text" defaultValue="SecureTech Solutions - Security Company" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
-              <textarea rows={3} defaultValue="Leading provider of advanced security solutions for homes and businesses." className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-end">
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">
-            Save Changes
-          </button>
         </div>
       </div>
     </div>
@@ -472,6 +559,178 @@ export default function AdminPage() {
           {activeTab === "settings" && renderSettings()}
         </main>
       </div>
+
+      {/* Add Product Modal */}
+      {showAddProductModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Add New Product</h3>
+              <button 
+                onClick={() => setShowAddProductModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={(e) => handleProductInputChange("name", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholder="Enter product name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <select
+                  value={newProduct.category}
+                  onChange={(e) => handleProductInputChange("category", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                >
+                  <option value="Cameras">Camera</option>
+                  <option value="Alarms">Duut Dohio</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                <input
+                  type="text"
+                  value={newProduct.price}
+                  onChange={(e) => handleProductInputChange("price", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholder="e.g., 199 or $199"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newProduct.stock}
+                  onChange={(e) => handleProductInputChange("stock", parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddProductModal(false)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddProduct}
+                disabled={!newProduct.name || !newProduct.price || newProduct.stock <= 0}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Product Modal */}
+      {showEditProductModal && editingProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Product</h3>
+              <button 
+                onClick={() => {
+                  setShowEditProductModal(false);
+                  setEditingProduct(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                <input
+                  type="text"
+                  value={editingProduct.name}
+                  onChange={(e) => handleEditProductInputChange("name", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholder="Enter product name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                <select
+                  value={editingProduct.category}
+                  onChange={(e) => handleEditProductInputChange("category", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                >
+                  <option value="Cameras">Camera</option>
+                  <option value="Alarms">Duut Dohio</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                <input
+                  type="text"
+                  value={editingProduct.price}
+                  onChange={(e) => handleEditProductInputChange("price", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholder="e.g., 199 or $199"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editingProduct.stock}
+                  onChange={(e) => handleEditProductInputChange("stock", parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditProductModal(false);
+                  setEditingProduct(null);
+                }}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEditProduct}
+                disabled={!editingProduct.name || !editingProduct.price || editingProduct.stock <= 0}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
