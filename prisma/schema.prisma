@@ -15,7 +15,7 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(auto()) @map("_id") @test.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   phoneNumber String
   email       String   @unique
@@ -23,7 +23,7 @@ model User {
 }
 
 model Product {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @map("_id") @default(auto()) @db.ObjectId
   name      String
   category  String
   price     Float
@@ -33,7 +33,7 @@ model Product {
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @map("_id") @default(auto()) @db.ObjectId
   name      String
   role      String?
   company   String?
@@ -42,11 +42,10 @@ model Comment {
 }
 
 model Setting {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @map("_id") @default(auto()) @db.ObjectId
   companyName String
   email       String
   phone       String
   address     String
-  // Add more fields as needed
   updatedAt   DateTime @updatedAt
 }
