@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 export default function AdminPage() {
@@ -28,6 +28,42 @@ export default function AdminPage() {
     price: "",
     stock: 0,
   });
+
+  // Settings state management
+  const [settings, setSettings] = useState({
+    companyName: "",
+    email: "",
+    phone: "",
+    address: "",
+  });
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsError, setSettingsError] = useState("");
+
+  // Fetch settings from database on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      setSettingsLoading(true);
+      setSettingsError("");
+      try {
+        const res = await fetch("/api/settings");
+        if (!res.ok) throw new Error("Failed to fetch settings");
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setSettings({
+            companyName: data[0].companyName || "",
+            email: data[0].email || "",
+            phone: data[0].phone || "",
+            address: data[0].address || "",
+          });
+        }
+      } catch (e: any) {
+        setSettingsError(e.message || "Error loading settings");
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Sample comments data with state management
   const [recentComments, setRecentComments] = useState([
@@ -100,7 +136,6 @@ export default function AdminPage() {
       change: "+23%",
       color: "purple",
     },
-    { title: "Sold", value: "0", change: "-3%", color: "orange" },
   ];
 
   // Function to update product quantity
@@ -311,6 +346,33 @@ export default function AdminPage() {
       alert("Comments submitted to database!");
     } catch (e) {
       alert("Failed to submit comments.");
+    }
+  };
+
+  // Function to handle settings input changes
+  const handleSettingsInputChange = (field: string, value: string) => {
+    setSettings((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Function to submit settings to database
+  const handleSubmitSettings = async () => {
+    try {
+      const response = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+
+      if (response.ok) {
+        alert("Settings saved successfully!");
+      } else {
+        throw new Error("Failed to save settings");
+      }
+    } catch (e) {
+      alert("Failed to save settings.");
     }
   };
 
@@ -645,7 +707,7 @@ export default function AdminPage() {
                   type="text"
                   value={newComment.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   placeholder="Enter client name"
                 />
               </div>
@@ -658,7 +720,7 @@ export default function AdminPage() {
                   type="text"
                   value={newComment.role}
                   onChange={(e) => handleInputChange("role", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   placeholder="e.g., Security Manager"
                 />
               </div>
@@ -671,7 +733,7 @@ export default function AdminPage() {
                   type="text"
                   value={newComment.company}
                   onChange={(e) => handleInputChange("company", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   placeholder="e.g., TechCorp"
                 />
               </div>
@@ -684,7 +746,7 @@ export default function AdminPage() {
                   value={newComment.comment}
                   onChange={(e) => handleInputChange("comment", e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
                   placeholder="Enter client testimonial"
                 />
               </div>
@@ -832,55 +894,81 @@ export default function AdminPage() {
   const renderSettings = () => (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-6">Settings</h3>
-      <div className="space-y-6">
-        <div>
-          <h4 className="text-md font-medium text-gray-900 mb-4">
-            Company Information
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Company Name
-              </label>
-              <input
-                type="text"
-                defaultValue="SecureTech Solutions"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                defaultValue="info@securetech.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Phone
-              </label>
-              <input
-                type="tel"
-                defaultValue="+1 (555) 123-4567"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                Address
-              </label>
-              <input
-                type="text"
-                defaultValue="123 Security Street"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
-              />
+      {settingsLoading ? (
+        <div className="text-gray-500">Loading settings...</div>
+      ) : settingsError ? (
+        <div className="text-red-600">{settingsError}</div>
+      ) : (
+        <div className="space-y-6">
+          <div>
+            <h4 className="text-md font-medium text-gray-900 mb-4">
+              Company Information
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  value={settings.companyName}
+                  onChange={(e) =>
+                    handleSettingsInputChange("companyName", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={settings.email}
+                  onChange={(e) =>
+                    handleSettingsInputChange("email", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={settings.phone}
+                  onChange={(e) =>
+                    handleSettingsInputChange("phone", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  value={settings.address}
+                  onChange={(e) =>
+                    handleSettingsInputChange("address", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                />
+              </div>
             </div>
           </div>
+          <div className="flex justify-end">
+            <button
+              onClick={handleSubmitSettings}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              Save Settings
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 
